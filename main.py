@@ -1,12 +1,12 @@
 import os
 import json
-from agent_config import SYSTEM_PROMPT, tools
+from agent_config import SYSTEM_PROMPT, tools, ROUTING_MODEL, SYNTHESIS_MODEL
 from openai import OpenAI
 from dotenv import load_dotenv
 
 # Import our custom modules
 from data_fetcher import get_stock_prices
-from instruments import Stock
+from instruments import Stock, EuropeanOption
 
 # Load environment variables from .env
 load_dotenv()
@@ -28,13 +28,29 @@ def calculate_historical_volatility(ticker: str) -> float:
     """
     Wrapper function to calculate volatility using the Stock class.
     """
+    # 1. Fetch 1 year of data
+    raw_data = get_stock_prices(ticker, 365)
+    
+    # 2. Initialize Stock and Inject Data
     stock = Stock(ticker)
+    stock.load_historical_data(raw_data)
+    
     return stock.calculate_historical_volatility()
+def calculate_value_at_risk(ticker: str, confidence_level: float = 0.95, days: int = 1, num_simulations: int = 10000) -> float:
+    """Wrapper to calculate the Value at Risk using Monte Carlo."""
+    raw_data = get_stock_prices(ticker, 365)
+    
+    stock = Stock(ticker)
+    stock.load_historical_data(raw_data)
+    
+    return stock.calculate_risk(confidence_level, days, num_simulations)
 
 # Tool Registry
 available_functions = {
     "get_stock_prices": get_stock_prices,
     "calculate_historical_volatility": calculate_historical_volatility,
+    "calculate_option_price": EuropeanOption.calculate_option_price,
+    "calculate_value_at_risk": calculate_value_at_risk
 }
 
 # Main agent interaction loop
@@ -60,7 +76,7 @@ while True:
     # Edge Case 2: Handle API/Network errors
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-001", 
+            model=ROUTING_MODEL, 
             messages=messages,
             tools=tools,
             tool_choice="auto"
@@ -116,7 +132,7 @@ while True:
         # 5. Second Hop: Get final answer from LLM
         try:
             second_response = client.chat.completions.create(
-                model="google/gemini-2.0-flash-001",
+                model=ROUTING_MODEL,
                 messages=messages
             )
             final_message = second_response.choices[0].message
