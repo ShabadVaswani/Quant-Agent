@@ -10,6 +10,7 @@ This project implements an agentic loop where an LLM acts as the brain, routing 
 *   **Agentic Interaction Loop:** A continuous terminal interface where the user can ask financial questions.
 *   **Tool Execution:** The LLM can dynamically select and execute multiple tools simultaneously based on the user's prompt.
 *   **Object-Oriented Finance:** Financial instruments are modeled using OOP principles (e.g., the `Stock` subclass inheriting from an abstract `FinancialInstrument` class) allowing for scalable data injection and logic.
+*   **Advanced Quantitative Models:** Implements actual statistical models, including historical log returns volatility, Black-Scholes for European option pricing, and Monte Carlo simulations for Value at Risk (VaR) calculations.
 *   **Data Fetching:** Robust fetching of historical market data using `yfinance` and `pandas`.
 *   **State Management:** The agent maintains conversation history and tool execution results, allowing for complex, multi-turn reasoning ("Second Hop" architecture).
 *   **Safety Constraints:** Includes character limits on input to prevent context window exhaustion and error handling to ensure session stability during network or API failures.
@@ -18,7 +19,7 @@ This project implements an agentic loop where an LLM acts as the brain, routing 
 
 *   `main.py`: The entry point. Initializes the OpenAI client, manages the memory (`messages`), handles the interaction loop, tool dispatching, and execution.
 *   `agent_config.py`: Contains the system prompt and JSON schema definitions for the tools available to the LLM.
-*   `instruments.py`: Defines the foundational `FinancialInstrument` abstract base class and specific subclasses like `Stock`. Contains methods for calculating risk/volatility.
+*   `instruments.py`: Defines the foundational `FinancialInstrument` abstract base class and specific subclasses like `Stock` and `EuropeanOption`. Contains methods for calculating historical volatility, Black-Scholes option prices, and Monte Carlo Value at Risk (VaR).
 *   `data_fetcher.py`: Contains functions for interacting with external APIs (like Yahoo Finance) to retrieve raw historical data.
 *   `requirements.txt`: Lists all required Python packages.
 
@@ -68,6 +69,7 @@ python main.py
 
 You can then ask the agent questions such as:
 *   *"What is the historical volatility of AAPL?"*
-*   *"Get the stock prices for MSFT over the last 14 days and calculate its risk."*
+*   *"What is the 1-day Value at Risk for Google at a 99% confidence level?"*
+*   *"Calculate the theoretical price for a call option on MSFT with a strike of 400 and 30 days to expiry."*
 
 Type `quit` or `exit` to end the session.
